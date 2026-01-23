@@ -1,3 +1,4 @@
+import { useReducer } from "react";
 import User from "../models/userModel";
 import generateToken from "../utils/generateToken";
 import bcrypt from "bcrypt";
@@ -28,9 +29,35 @@ const registerUser = async (req,res) => {
 }
 const loginUser = async (req,res) => {
     try {
-        
+        const {email,password} = req.body;
+        const user = await User.findOne({email,isAdmin:false});
+        if(!user){
+            return res.status(400).json({message:"Email or password is incorrect"});
+        }
+        if(user.isBlocked){
+            return res.status(400).json({message:"User is blocked"});
+        }
+        if(!await bcrypt.compare(password,user.password)){
+            return res.status(400).json({message:"Email or password is incorrect"});
+        }
+        const token = generateToken(user);
+        res.cookie("token",token,{
+            httpOnly:true,
+            secure:true,
+            maxAge:3600000
+        });
+        res.status(200).json({
+            user:{
+                id:user._id,
+                name:user.name,
+                email:user.email,
+                image:user.image,
+                mobile:user.mobile
+            },token
+        })
     } catch (error) {
-        
+        console.error(error);
+        return res.status(500).json({ message: "Internal server error" });
     }
 }
 
