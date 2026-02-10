@@ -90,6 +90,4 @@ export {
     getUsers,
     createUser,
     deleteUser
-
-
 }
