@@ -85,9 +85,47 @@ const deleteUser = async (req,res) => {
     }
 }
 
+const editUser = async (req,res) => {
+    try {
+        const id = req.params.id;
+        const {name,email,password,mobile,image} = req.body;
+        const updateFields = {};
+        if(name) updateFields.name = name;
+        if(email) updateFields.email = email;
+        if(mobile) updateFields.mobile = mobile;
+        if(image) updateFields.image = image;
+        if(password){
+            const hashedPassword = await bcrypt.hash(password,10);
+            updateFields.password = hashedPassword;
+        }
+        await User.findByIdAndUpdate(id,updateFields);
+        const updatedUser = await User.findById(id);
+        res.status(200).json({message:"User details updated",user:updatedUser})
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({message:"Error while editing user details"});
+    }
+}
+
+const logoutAdmin = async (req,res) => {
+    try {
+        res.clearCookie("token",{
+            httpOnly:true,
+            secure:true
+        });
+        res.status(200).json({message:"Logged out successfully"});
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({message:"Error while logging out"});
+    }
+}
+
 export {
     adminLogin,
     getUsers,
+    updateUserStatus,
     createUser,
-    deleteUser
+    deleteUser,
+    editUser,
+    logoutAdmin
 }
